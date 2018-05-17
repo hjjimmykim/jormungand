@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from copy import deepcopy
 
 # Display image
 def display_image(image):
@@ -13,17 +14,20 @@ def display_image(image):
     plt.imshow(image,cmap='gray')
     plt.axis('off')
 
-# Apply random permutation to sets of images
-def permutate(X_list):
-    # X_list = list containing arrays of shape batch_size x input_dim
-    
+# Apply random permutation to dataset
+def permutate(dataset):
     # Random permutation
-    permutation = np.arange(X_list[0].shape[1])
+    permutation = np.arange(dataset.train.images.shape[1])
     np.random.shuffle(permutation)
     
-    # Apply permutation
-    X_list2 = []
-    for i in range(len(X_list)):
-        X_list2.append(X_list[i][:,permutation])
+    # New permuted dataset
+    dataset_2 = deepcopy(dataset)
     
-    return X_list2, permutation
+    # _images = property as opposed to images = function
+    dataset_2.train._images = dataset.train.images[:,permutation]
+    dataset_2.validation._images = dataset.validation.images[:,permutation]
+    dataset_2.test._images = dataset.test.images[:,permutation]
+    
+    return dataset_2
+    
+    
