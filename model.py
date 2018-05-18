@@ -49,7 +49,6 @@ class Net:
         if not hasattr(self, "loss_EWC"):
             self.loss_EWC = self.loss_vanilla
         else:
-            print('blah_EWC')
             # Summing up losses
             for i in range(len(self.params)):
                 self.loss_EWC += (lambda_EWC/2) * tf.reduce_sum(tf.multiply(self.Fisher[i].astype(np.float32),tf.square(self.params[i]-self.params_prev[i])))
