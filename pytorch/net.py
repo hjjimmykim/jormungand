@@ -1,3 +1,5 @@
+import torch.nn as nn
+
 class Net(nn.Module):
     def __init__(self, input_dim, output_dim, hidden_size=400, hidden1_dropout_prob=0.2, hidden2_dropout_prob=0.5):
         super(Net, self).__init__()

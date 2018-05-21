@@ -37,21 +37,36 @@ class Net:
         
     def set_L2(self, lambda_L2):
         # L2
+        '''
+        self.loss_L2 = self.loss_vanilla
+        if hasattr(self, "params_prev"):
+            for i in range(len(self.params)):
+                self.loss_L2 += (lambda_L2/2) * tf.reduce_sum(tf.square(self.params[i]-self.params_prev[i]))
+        '''
         if not hasattr(self, "loss_L2"):
             self.loss_L2 = self.loss_vanilla
         else:
             for i in range(len(self.params)):
                 self.loss_L2 += (lambda_L2/2) * tf.reduce_sum(tf.square(self.params[i]-self.params_prev[i]))
+    
+                
         self.step = tf.train.GradientDescentOptimizer(0.1).minimize(self.loss_L2)
         
     def set_EWC(self, lambda_EWC):
         # Elastic weight consolidation
+        '''
+        self.loss_EWC = self.loss_vanilla
+        if hasattr(self, "params_prev"):
+            for i in range(len(self.params)):
+                self.loss_EWC += (lambda_EWC/2) * tf.reduce_sum(tf.multiply(self.Fisher[i].astype(np.float32),tf.square(self.params[i]-self.params_prev[i])))
+        '''
         if not hasattr(self, "loss_EWC"):
             self.loss_EWC = self.loss_vanilla
         else:
             # Summing up losses
             for i in range(len(self.params)):
                 self.loss_EWC += (lambda_EWC/2) * tf.reduce_sum(tf.multiply(self.Fisher[i].astype(np.float32),tf.square(self.params[i]-self.params_prev[i])))
+                
         self.step = tf.train.GradientDescentOptimizer(0.1).minimize(self.loss_EWC)
         
     def save_parameters(self):

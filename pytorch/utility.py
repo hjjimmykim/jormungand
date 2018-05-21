@@ -1,3 +1,10 @@
+import torchvision.transforms as transforms
+import torch
+import torch.nn.functional as F
+from torch import autograd
+import matplotlib.pyplot as plt
+import numpy as np
+
 # Data preprocessing -------------------------------------------------------------------
 
 # Permutate pixels
@@ -43,14 +50,14 @@ def calc_L2_loss(net, fixed):
     
 # Fisher Info. -------------------------------------------------------------------------
 
-def calc_Fisher(net, dataset, sample_size = 1024):
+def calc_Fisher(net, dataset, sample_size = 1024, use_cuda = False):
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=True,num_workers=2)
-    
+
     # Preallocate
     Fisher = [torch.zeros(x.size()) for x in list(net.parameters())]
     if torch.cuda.is_available() and use_cuda:
         Fisher = [x.cuda() for x in Fisher]
-    
+    print('blah')
     # Take expectation over log-derivative squared
     num_sampled = 0 # Counter for number of samples so far
     for data, label in dataloader:
@@ -65,15 +72,15 @@ def calc_Fisher(net, dataset, sample_size = 1024):
         net.eval()      # Disable dropout layer
         output = net(data)
         net.train()     # Enable dropout layer
+
+        prob = F.softmax(net(data),1)
         
-        prob = F.softmax(net(data))
-        
-        y_sample = torch.multinomial(prob).data # Sample from model
+        y_sample = torch.multinomial(prob,1).data # Sample from model
         
         #y_sample = label.data  # Given by data
-        
-        logL = F.log_softmax(output)[range(1),y_sample]
-        
+
+        logL = F.log_softmax(output,1)[range(1),y_sample.item()]
+
         # First derivative
         logL_grad = autograd.grad(logL, net.parameters())
         
@@ -96,7 +103,7 @@ def calc_Fisher(net, dataset, sample_size = 1024):
 
 # Test accuracy ------------------------------------------------------------------------
 
-def test_acc(net, dataset, input_dim, disp=False):
+def test_acc(net, dataset, input_dim, batch_size, use_cuda=False, disp=False):
     net.eval()  # Switch to eval mode (disable dropout layer)
     testloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False)
 
@@ -125,7 +132,7 @@ def test_acc(net, dataset, input_dim, disp=False):
     
 # Plot accuracy ------------------------------------------------------------------------
 
-def plot_accuracy(time_list, acc_lists, acc_L2_lists, acc_EWC_lists, N_task, ylabelname = 'Accuracy', save=False, savename='blah')
+def plot_accuracy(time_list, acc_lists, acc_L2_lists, acc_EWC_lists, N_task, ylabelname = 'Accuracy', save=False, savename='blah'):
     num_lists = len(acc_lists)
 
     # Colormap for separate tasks

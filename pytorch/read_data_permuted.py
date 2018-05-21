@@ -1,3 +1,8 @@
+import numpy as np
+import torchvision
+from utility import trans
+import torchvision.transforms as transforms
+
 def read_data_permuted(input_dim,N_task):
 
     # Generate random permutations
