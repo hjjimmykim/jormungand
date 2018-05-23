@@ -57,9 +57,10 @@ def calc_Fisher(net, dataset, sample_size = 1024, use_cuda = False):
     Fisher = [torch.zeros(x.size()) for x in list(net.parameters())]
     if torch.cuda.is_available() and use_cuda:
         Fisher = [x.cuda() for x in Fisher]
-    print('blah')
+    
     # Take expectation over log-derivative squared
     num_sampled = 0 # Counter for number of samples so far
+
     for data, label in dataloader:
         data = data.view(1, -1)
 
@@ -75,11 +76,9 @@ def calc_Fisher(net, dataset, sample_size = 1024, use_cuda = False):
 
         prob = F.softmax(net(data),1)
         
-        y_sample = torch.multinomial(prob,1).data # Sample from model
-        
+        y_sample = torch.multinomial(prob,1) # Sample from model
         #y_sample = label.data  # Given by data
-
-        logL = F.log_softmax(output,1)[range(1),y_sample.item()]
+        logL = F.log_softmax(output,1)[0,y_sample.long()]
 
         # First derivative
         logL_grad = autograd.grad(logL, net.parameters())
@@ -94,7 +93,8 @@ def calc_Fisher(net, dataset, sample_size = 1024, use_cuda = False):
         num_sampled += 1
         if num_sampled >= sample_size:
             break
-            
+
+    
     # Average
     for i in range(len(Fisher)):
         Fisher[i] /= sample_size
@@ -119,8 +119,8 @@ def test_acc(net, dataset, input_dim, batch_size, use_cuda=False, disp=False):
         outputs = net(images)
         _, predicted = torch.max(outputs.data, 1)
         total += labels.size(0) # Batch size
-        correct += (predicted == labels).sum()
-        
+        correct += (predicted == labels).sum().item()
+
     acc = correct/total
         
     if disp:
